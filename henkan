@@ -1,0 +1,145 @@
+<html>
+<head>
+    <style>
+        /* CSSでスタイルを設定します */
+        h1 {
+            text-align: center;
+        }
+
+        textarea {
+            width: 80%;
+            height: 300px;
+            margin: 10px;
+        }
+
+        button {
+            width: 100px;
+            height: 50px;
+            margin: 10px;
+        }
+
+        #output {
+            width: 80%;
+            height: 300px;
+            margin: 10px;
+            border: 1px solid black;
+            font-family: monospace;
+            white-space: pre;
+            /* スクロールバーを表示するために、overflowプロパティをautoにします */
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>テキスト変換ウェブサイト</h1>
+    <p>＜形式A＞のテキストを入力してください。</p>
+    <textarea id="input"></textarea>
+    <button id="convert">変換</button>
+    <p>＜形式B＞のテキストが出力されます。</p>
+    <div id="output"></div>
+    <button id="copy">コピー</button>
+    <script>
+        // Javascriptで処理を実装します
+        // 変換ボタンを取得します
+        var convertButton = document.getElementById("convert");
+        // 変換ボタンがクリックされたときのイベントリスナーを登録します
+        convertButton.addEventListener("click", function() {
+            // 入力テキストを取得します
+            var inputText = document.getElementById("input").value;
+            // 出力テキストを初期化します
+            var outputText = "";
+            // 入力テキストを改行で分割して、各行に対して処理を行います
+            var lines = inputText.split("\n");
+            // 経験点と所持金の行数をカウントする変数を用意します
+            var expCount = 0;
+            var moneyCount = 0;
+            for (var i = 0; i < lines.length; i++) {
+                // 現在の行を取得します
+                var line = lines[i];
+                // 基本能力値の項目かどうかを判定します
+                if (line.startsWith("『")) {
+                    // 項目名と数値を抽出します
+                    var name = line.match(/『(.+)』/)[1];
+                    var value = line.match(/……(.+)/)[1];
+                    // ()と[]内の数値を除いて、合算します
+                    var sum = 0;
+                    var numbers = value.match(/\d+/g);
+                    for (var j = 0; j < numbers.length; j++) {
+                        sum += parseInt(numbers[j]);
+                    }
+                    // 数値が20以上なら20にします
+                    if (sum > 20) {
+                        sum = 20;
+                    }
+                    // []内の数値を取得します
+                    var extra = "";
+                    var bracket = value.match(/\[.+\]/);
+                    if (bracket) {
+                        extra = bracket[0];
+                    }
+                    // 出力テキストに項目名と数値を追加します
+                    outputText += name + sum + extra + "/";
+                } else if (line.startsWith("○")) {
+                    // タイトル行なら出力テキストに改行を追加します
+                    // 経験点と所持金のタイトルは出力テキストに追加しません
+                    if (!line.includes("経験点") && !line.includes("所持金")) {
+                        outputText += "\n" + line + "\n";
+                    }
+                    // 経験点と所持金の行数をリセットします
+                    expCount = 0;
+                    moneyCount = 0;
+                    // 経験点と所持金のタイトルかどうかを判定します
+                    if (line.includes("経験点")) {
+                        // 経験点の行数を1にします
+                        expCount = 1;
+                    } else if (line.includes("所持金")) {
+                        // 所持金の行数を1にします
+                        moneyCount = 1;
+                    }
+                } else {
+                    // それ以外の行なら、経験点と所持金の行数をチェックします
+                    if (expCount > 0 && expCount < 3) {
+                        // 経験点の行数が1か2なら、出力テキストに追加せずに、行数を増やします
+                        expCount++;
+                    } else if (moneyCount > 0 && moneyCount < 2) {
+                        // 所持金の行数が1なら、出力テキストに追加せずに、行数を増やします
+                        moneyCount++;
+                    } else {
+                        // それ以外の行ならそのまま出力テキストに追加します
+                        outputText += line + "\n";
+                    }
+                }
+            }
+            // 出力テキストに含まれる連続した空行を1行に短縮します
+            // 正規表現を使って、2つ以上の改行を1つに置き換えます
+            outputText = outputText.replace(/\n{3,}/g, "\n\n");
+            // 出力テキストを表示します
+            document.getElementById("output").textContent = outputText;
+        });
+        // コピーするボタンを取得します
+        var copyButton = document.getElementById("copy");
+        // コピーするボタンがクリックされたときのイベントリスナーを登録します
+        copyButton.addEventListener("click", function() {
+            // 出力テキストを取得します
+            var outputText = document.getElementById("output").textContent;
+            // 出力テキストをクリップボードにコピーするために、一時的にテキストエリアを作成します
+            var temp = document.createElement("textarea");
+            // テキストエリアに出力テキストを設定します
+            temp.value = outputText;
+            // テキストエリアを画面外に配置します
+            temp.style.position = "absolute";
+            temp.style.left = "-9999px";
+            // テキストエリアをbodyに追加します
+            document.body.appendChild(temp);
+            // テキストエリアを選択します
+            temp.select();
+            // テキストエリアの内容をクリップボードにコピーします
+            document.execCommand("copy");
+            // テキストエリアをbodyから削除します
+            document.body.removeChild(temp);
+            // コピーしたことをユーザーに知らせます
+            alert("出力テキストをクリップボードにコピーしました。");
+        });
+    </script>
+</body>
+</html>
